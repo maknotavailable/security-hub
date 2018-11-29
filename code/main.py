@@ -70,17 +70,14 @@ def alert_email(path_local, pred, score):
         receiver = config['email']['receiver'].split(',')
         subject = 'IBIZA Alert - Human Spotted in the Residence'
         body = 'A Human has been spotted in the residence. \
-                The following objects were detects: %s with the \
-                following likelyhood: %s . \
-                See the image here: %s' % (str(pred),str(score),str(img_url))
+        The following objects were detected: %s with the \
+        following likelihood: %s . \
+        See the image here: %s' % (str(pred),str(score),str(img_url))
 
-        email_text = """\  
-            From: %s  
-            To: %s  
-            Subject: %s
+        email_text = """Subject: %s
 
-            %s
-            """ % (sender, ", ".join(receiver), subject, body)
+        %s
+        """ % (subject, body)
 
         # Send Email
         server = smtplib.SMTP_SSL(config['email']['server'], 465)
@@ -108,11 +105,15 @@ def capture(rpi):
                 # Image to stream
                 camera.rotation = 180
                 camera.capture(stream, format='jpeg', resize=(300,300))
+                
+                ## NOTE: for testing only ##
                 # Store image
                 fn_img_local = fp_img_local + str(time.time()) + '.jpg'
                 camera.capture(fn_img_local)
                 # upload image to blbo
                 upload(fn_img_local, 'container-time')
+                # send alert email
+                alert_email(fn_img_local, 'test', 'nada')
 
             # Construct a numpy array from the stream
             data = np.fromstring(stream.getvalue(), dtype=np.uint8)
@@ -144,16 +145,15 @@ def capture(rpi):
 def alert(frame, pred, score):
     """Evaluate frame for need to send alert"""
     try:
-        # Step 1 - check for person (or change?)
+        # Step 1 - check for person (TODO: or change?)
         ## a. check for person
         if 'person' in pred:
             print('person detected')
             fn_img_person = fp_img_local + str(time.time()) + '_person.jpg'
             cv2.imwrite(fn_img_person, frame)
-            # Step 2 - upload image to blbo
+            # Step 2 - upload image to blob
             upload(fn_img_person, 'container-person')
-        ## b. lookup of found items - if change (object count, (location))
-            # Step 3 - send alter email/other
+            # Step 3 - send alert email
             alert_email(fn_img_person, pred, score)
     except Exception as e:
         print('[ERROR] While evaluating alert: ', str(e))
