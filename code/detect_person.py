@@ -8,7 +8,7 @@ import cv2
 def detect(frame, net, CLASSES, COLORS, conf=0.2):
 
     # grab the frame dimensions and convert it to a blob
-    (h, w) = frame.shape[:2]
+    #(h, w) = frame.shape[:2]
     blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)),
         0.007843, (300, 300), 127.5)
 
@@ -58,3 +58,4 @@ def detect(frame, net, CLASSES, COLORS, conf=0.2):
     # cv2.destroyAllWindows()
 
     return frame, pred, score
+
