@@ -53,7 +53,7 @@ def upload(path_local, container_name):
     """Upload image to Azure Blob Storage"""
     try:
         fn = path_local.split('/')[-1]
-        block_blob_service.create_blob_from_path(config['blob'][container_name], path_local, fn)
+        block_blob_service.create_blob_from_path(config['blob'][container_name], fn, path_local)
         print('[INFO] Uploaded image to blob storage')
     except Exception as e:
         print('[ERROR] Uploading image failed', str(e))
