@@ -12,6 +12,7 @@ import time
 import configparser
 import imutils
 from azure.storage.blob import BlockBlobService
+import smtplib
 
 # Load custom functions
 from detect_person import detect
@@ -25,7 +26,7 @@ fp_img_local = '/home/pi/Desktop/Security/'
 
 def init(fp_deploy, fp_model):
     """Load model and dependencies"""
-    global CLASSES, COLORS, net, block_blob_service, config
+    global CLASSES, COLORS, net, block_blob_service, config, server
     try:
         # Load config file
         config = configparser.ConfigParser()
@@ -46,8 +47,9 @@ def init(fp_deploy, fp_model):
         # prepare blob connection
         # Create the BlockBlockService that is used to call the Blob service for the storage account
         block_blob_service = BlockBlobService(account_name=config['blob']['account'], account_key=config['blob']['key'])
+
     except Exception as e:
-        print('[ERROR] loading model', str(e))
+        print('[ERROR] loading model failed: ', str(e))
 
 def upload(path_local, container_name):
     """Upload image to Azure Blob Storage"""
@@ -56,7 +58,40 @@ def upload(path_local, container_name):
         block_blob_service.create_blob_from_path(config['blob'][container_name], fn, path_local)
         print('[INFO] Uploaded image to blob storage')
     except Exception as e:
-        print('[ERROR] Uploading image failed', str(e))
+        print('[ERROR] Uploading image failed: ', str(e))
+
+def alert_email(path_local, pred, score):
+    """Send an alert message via email about potential intruders."""
+    try:
+        # Prepare Email
+        fn = path_local.split('/')[-1]
+        img_url = config['blob']['link-person'] + fn
+        sender = config['email']['sender']
+        receiver = config['email']['receiver'].split(',')
+        subject = 'IBIZA Alert - Human Spotted in the Residence'
+        body = 'A Human has been spotted in the residence. \
+                The following objects were detects: %s with the \
+                following likelyhood: %s . \
+                See the image here: %s' % (str(pred),str(score),str(img_url))
+
+        email_text = """\  
+            From: %s  
+            To: %s  
+            Subject: %s
+
+            %s
+            """ % (sender, ", ".join(receiver), subject, body)
+
+        # Send Email
+        server = smtplib.SMTP_SSL(config['email']['server'], 465)
+        server.ehlo()
+        server.login(sender, config['email']['key'])
+        server.sendmail(sender, receiver, email_text)
+        server.close()
+        print('[INFO] sent email alert')
+    except Exception as e:
+        print('[ERROR] sending alert email failed: ', str(e))
+
 
 def capture(rpi):
     """Capture images using Rasperry Pi Camera"""
@@ -102,7 +137,7 @@ def capture(rpi):
 
     except Exception as e:
         frame = None
-        print('[ERROR] image capture ' ,str(e))
+        print('[ERROR] image capture failed: ' ,str(e))
 
     return frame
 
@@ -119,10 +154,9 @@ def alert(frame, pred, score):
             upload(fn_img_person, 'container-person')
         ## b. lookup of found items - if change (object count, (location))
             # Step 3 - send alter email/other
-            ##TODO: sendgrid?
-            ##TODO: incl pred, score in upload
+            alert_email(fn_img_person, pred, score)
     except Exception as e:
-        print('[ERROR] While evaluating alert', str(e))
+        print('[ERROR] While evaluating alert: ', str(e))
 
 def score():
     # Initialize run

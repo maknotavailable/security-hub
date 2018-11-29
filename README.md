@@ -13,12 +13,12 @@ Security feature to detect people in surveillance frame and notify user. Images 
 - OpenCV 3
 
 ## Install Instructions
-- Install Raspbian Stretch via NOOBS
-https://www.raspberrypi.org/downloads/noobs/
-- Install OpenCV 
-https://www.pyimagesearch.com/2018/09/19/pip-install-opencv/
-- Install some additional dependencies
-sudo apt-get install libatlas-base-dev
-sudo apt-get install libjasper-dev
-sudo apt-get install libqtgui4
-sudo apt-get install python3-pyqt5
+- Install Raspbian Stretch via NOOBS  
+https://www.raspberrypi.org/downloads/noobs/  
+- Install OpenCV   
+https://www.pyimagesearch.com/2018/09/19/pip-install-opencv/  
+- Install some additional dependencies  
+sudo apt-get install libatlas-base-dev  
+sudo apt-get install libjasper-dev  
+sudo apt-get install libqtgui4  
+sudo apt-get install python3-pyqt5  
