@@ -59,7 +59,7 @@ def upload(path_local, container_name):
     try:
         fn = path_local.split('/')[-1]
         block_blob_service.create_blob_from_path(config['blob'][container_name], fn, path_local)
-        print('[INFO] Uploaded image to blob storage')
+        print('[INFO] Uploaded image to blob storage: ', container_name)
     except Exception as e:
         print('[ERROR] Uploading image failed: ', str(e))
 
@@ -131,16 +131,16 @@ def capture(rpi):
                 time.sleep(4)
                 # Image to stream
                 camera.rotation = 180
-                camera.capture(stream, format='jpeg', resize=(300,300))
+                camera.capture(stream, format='jpeg', resize=(400,400))
                 
-                ## NOTE: for testing only ##
-                # Store image
-                fn_img_local = fp_img_local + str(time.time()) + '.jpg'
-                camera.capture(fn_img_local)
-                # upload image to blbo
-                upload(fn_img_local, 'container-time')
-                # send alert email
-                alert_email(fn_img_local, 'test', 'nada')
+                # ## NOTE: for testing only ##
+                # # Store image
+                # fn_img_local = fp_img_local + str(time.time()) + '.jpg'
+                # camera.capture(fn_img_local)
+                # # upload image to blbo
+                # upload(fn_img_local, 'container-time')
+                # # send alert email
+                # alert_email(fn_img_local, 'test', 'nada')
 
             # Construct a numpy array from the stream
             data = np.fromstring(stream.getvalue(), dtype=np.uint8)
