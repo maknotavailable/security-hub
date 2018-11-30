@@ -22,3 +22,8 @@ sudo apt-get install libatlas-base-dev
 sudo apt-get install libjasper-dev  
 sudo apt-get install libqtgui4  
 sudo apt-get install python3-pyqt5  
+
+## Run on Startup
+Add the following to your /etc/rc.local file:
+/usr/bin/tvservice -o (-p to re-enable)
+sudo python3 /home/pi/Desktop/SecurityHub/code/main.py &

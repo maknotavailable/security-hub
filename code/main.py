@@ -9,6 +9,7 @@ import cv2
 import io
 import numpy as np
 import time
+import datetime
 import configparser
 import imutils
 from azure.storage.blob import BlockBlobService
@@ -23,6 +24,8 @@ fp_deploy = '../model/MobileNetSSD_deploy.prototxt'
 fp_model = '../model/MobileNetSSD_deploy.caffemodel'
 # FP for local images
 fp_img_local = '/home/pi/Desktop/Security/'
+# Timer Last
+timer_last = None
 
 def init(fp_deploy, fp_model):
     """Load model and dependencies"""
@@ -89,6 +92,30 @@ def alert_email(path_local, pred, score):
     except Exception as e:
         print('[ERROR] sending alert email failed: ', str(e))
 
+def alert(frame, pred, score):
+    """Evaluate frame for need to send alert"""
+    global timer_last
+    try:
+        # Step 1 - check for person (TODO: or change?)
+        ## a. check for person
+        if 'person' in pred:
+            print('person detected')
+            fn_img_person = fp_img_local + str(time.time()) + '_person.jpg'
+            cv2.imwrite(fn_img_person, frame)
+            # Step 2 - upload image to blob
+            upload(fn_img_person, 'container-person')
+            # Step 3 - send alert email
+            alert_email(fn_img_person, pred, score)
+        ## b. upload based on timer
+        if timer_last is None:
+            timer_last = datetime.datetime.now()
+            upload(fn_img_person, 'container-time')
+        elif abs((timer_last - timer_start).total_seconds()) > 3600:
+            timer_last = datetime.datetime.now()
+            upload(fn_img_person, 'container-time')
+
+    except Exception as e:
+        print('[ERROR] While evaluating alert: ', str(e))
 
 def capture(rpi):
     """Capture images using Rasperry Pi Camera"""
@@ -142,38 +169,27 @@ def capture(rpi):
 
     return frame
 
-def alert(frame, pred, score):
-    """Evaluate frame for need to send alert"""
-    try:
-        # Step 1 - check for person (TODO: or change?)
-        ## a. check for person
-        if 'person' in pred:
-            print('person detected')
-            fn_img_person = fp_img_local + str(time.time()) + '_person.jpg'
-            cv2.imwrite(fn_img_person, frame)
-            # Step 2 - upload image to blob
-            upload(fn_img_person, 'container-person')
-            # Step 3 - send alert email
-            alert_email(fn_img_person, pred, score)
-    except Exception as e:
-        print('[ERROR] While evaluating alert: ', str(e))
-
 def score():
+    global timer_start
     # Initialize run
     init(fp_deploy, fp_model)
 
     while True:
+        # Start timer
+        timer_start = datetime.datetime.now() 
+
         # Capture image
         frame = capture(rpi=True)
 
         # Detect Objects
         f, r, s = detect(frame, net, CLASSES, COLORS, conf = 0.2)
-        print('DONE', r ,s)
 
         # Process results
         alert(f,r,s)
+
+        print('[INFO] loop complete: ', r ,s, str(time.time()))
         ##Timer buffer
-        time.sleep(30)
+        time.sleep(11)
 
 if __name__ == "__main__":
     score()
