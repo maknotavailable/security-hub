@@ -107,12 +107,13 @@ def alert(frame, pred, score):
             # Step 3 - send alert email
             alert_email(fn_img_person, pred, score)
         ## b. upload based on timer
+        fn_img_time = fp_img_local + str(time.time()) + '_time.jpg'
         if timer_last is None:
             timer_last = datetime.datetime.now()
-            upload(fn_img_person, 'container-time')
+            upload(fn_img_time, 'container-time')
         elif abs((timer_last - timer_start).total_seconds()) > 3600:
             timer_last = datetime.datetime.now()
-            upload(fn_img_person, 'container-time')
+            upload(fn_img_time, 'container-time')
 
     except Exception as e:
         print('[ERROR] While evaluating alert: ', str(e))
