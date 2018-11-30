@@ -104,21 +104,30 @@ def alert(frame, pred, score):
             cv2.imwrite(fn_img_person, frame)
             # Step 2 - upload image to blob
             upload(fn_img_person, 'container-person')
+
+            ## Take better resolution image:
+            fr = capture(rpi=True, resize=False)
+            fn_img_person = fp_img_local + str(time.time()) + '_person2.jpg'
+            cv2.imwrite(fn_img_person, fr)
+            upload(fn_img_person, 'container-person')
+
             # Step 3 - send alert email
             alert_email(fn_img_person, pred, score)
         ## b. upload based on timer
         fn_img_time = fp_img_local + str(time.time()) + '_time.jpg'
         if timer_last is None:
+            cv2.imwrite(fn_img_time, frame)
             timer_last = datetime.datetime.now()
             upload(fn_img_time, 'container-time')
         elif abs((timer_last - timer_start).total_seconds()) > 3600:
+            cv2.imwrite(fn_img_time, frame)
             timer_last = datetime.datetime.now()
             upload(fn_img_time, 'container-time')
 
     except Exception as e:
         print('[ERROR] While evaluating alert: ', str(e))
 
-def capture(rpi):
+def capture(rpi, resize=True):
     """Capture images using Rasperry Pi Camera"""
     try:
         if rpi:
@@ -132,7 +141,10 @@ def capture(rpi):
                 time.sleep(4)
                 # Image to stream
                 camera.rotation = 180
-                camera.capture(stream, format='jpeg', resize=(400,400))
+                if resize:
+                    camera.capture(stream, format='jpeg', resize=(400,400))
+                else:
+                    camera.capture(stream, format='jpeg')
                 
                 # ## NOTE: for testing only ##
                 # # Store image
