@@ -5,6 +5,7 @@
 ### a. if object detected: store image (blob), send message
 ### b. if none detected: store every Xth image (blob)
 
+import os
 import cv2
 import io
 import numpy as np
@@ -26,10 +27,11 @@ fp_model = '../model/MobileNetSSD_deploy.caffemodel'
 fp_img_local = '/home/pi/Desktop/Security/'
 # Timer Last
 timer_last = None
+email_last = time.time()
 
 def init(fp_deploy, fp_model):
     """Load model and dependencies"""
-    global CLASSES, COLORS, net, block_blob_service, config, server
+    global CLASSES, COLORS, net, block_blob_service, config
     try:
         # Load config file
         config = configparser.ConfigParser()
@@ -59,62 +61,71 @@ def upload(path_local, container_name):
     try:
         fn = path_local.split('/')[-1]
         block_blob_service.create_blob_from_path(config['blob'][container_name], fn, path_local)
+        os.remove(path_local)
         print('[INFO] Uploaded image to blob storage: ', container_name)
     except Exception as e:
-        print('[ERROR] Uploading image failed: ', str(e))
+        print('[ERROR] Uploading image failed: ', str(e), ' >> Image stored locally.')
 
-def alert_email(path_local, pred, score):
-    """Send an alert message via email about potential intruders."""
+def alert_email(path_local, pred, score, interval=1800):
+    """Send an alert message via email about potential intruders.
+    
+    Set the interval in which emails after the first are ignored, in seconds.
+    """
     try:
         # Prepare Email
         fn = path_local.split('/')[-1]
         img_url = config['blob']['link-person'] + fn
         sender = config['email']['sender']
         receiver = config['email']['receiver'].split(',')
-        subject = 'IBIZA Alert - Human Spotted in the Residence'
-        body = 'A Human has been spotted in the residence. \
-        The following objects were detected: %s with the \
-        following likelihood: %s . \
-        See the image here: %s' % (str(pred),str(score),str(img_url))
+        subject = 'ALARM - Human spotted in the residence !'
+        body = f'The following objects were detected: {str(pred)} with the following likelihood: {str(score)}. \
+        See the image here: {str(img_url)}'
 
         email_text = """Subject: %s
 
         %s
         """ % (subject, body)
-
-        # Send Email
-        server = smtplib.SMTP_SSL(config['email']['server'], 465)
-        server.ehlo()
-        server.login(sender, config['email']['key'])
-        server.sendmail(sender, receiver, email_text)
-        server.close()
-        print('[INFO] sent email alert')
+        
+        email_interval = time.time() - email_last
+        if email_interval > interval:
+            # Send Email
+            server = smtplib.SMTP_SSL(config['email']['server'], 465)
+            server.ehlo()
+            server.login(sender, config['email']['key'])
+            server.sendmail(sender, receiver, email_text)
+            server.close()
+            print('[INFO] sent email alert')
+        else:
+            print(f'[INFO] email alert skipped. Last email was {email_interval:.2f} seconds ago.')
     except Exception as e:
         print('[ERROR] sending alert email failed: ', str(e))
 
-def alert(frame, pred, score):
+def alert(frame, pred, score, threshold=0.4):
     """Evaluate frame for need to send alert"""
     global timer_last
     try:
+        now = str(time.time())
         # Step 1 - check for person (TODO: or change?)
         ## a. check for person
-        if 'person' in pred:
+        if ('person' in pred) & (score > threshold):
+            
             print('person detected')
-            fn_img_person = fp_img_local + str(time.time()) + '_person.jpg'
+            fr = capture(rpi=True, resize=False)
+
+            fn_img_person = fp_img_local + now + '_person.jpg'
             cv2.imwrite(fn_img_person, frame)
             # Step 2 - upload image to blob
             upload(fn_img_person, 'container-person')
 
             ## Take better resolution image:
-            fr = capture(rpi=True, resize=False)
-            fn_img_person = fp_img_local + str(time.time()) + '_person2.jpg'
+            fn_img_person = fp_img_local + now + '_person2.jpg'
             cv2.imwrite(fn_img_person, fr)
             upload(fn_img_person, 'container-person')
 
             # Step 3 - send alert email
             alert_email(fn_img_person, pred, score)
         ## b. upload based on timer
-        fn_img_time = fp_img_local + str(time.time()) + '_time.jpg'
+        fn_img_time = fp_img_local + now + '_time.jpg'
         if timer_last is None:
             cv2.imwrite(fn_img_time, frame)
             timer_last = datetime.datetime.now()

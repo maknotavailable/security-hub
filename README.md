@@ -1,7 +1,7 @@
 # SecurityHub
 Raspberry Pi based security hub.
 
-Security feature to detect people in surveillance frame and notify user. Images are stored in Azure Storage Blobs. 
+Security feature to detect people in surveillance frame and notify user. Images are stored in Azure Blob Storage. 
 
 ## Hardware Requirements
 - Raspberry Pi 3 B+
@@ -27,3 +27,12 @@ sudo apt-get install python3-pyqt5
 Add the following to your /etc/rc.local file:
 /usr/bin/tvservice -o (-p to re-enable)
 sudo python3 /home/pi/Desktop/SecurityHub/code/main.py &
+
+# TODO
+- Implement run on startup
+- Date based switch to turn camera on/off (google calendar integration)
+- Change detection, to not score every image
+- Connection with CCTV
+# DONE
+- Interval for email alerts, after first alert was sent
+- Threshold for person detection
