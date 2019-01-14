@@ -96,7 +96,7 @@ def alert_email(path_local, pred, score, interval=1800):
             server.close()
             print('[INFO] sent email alert')
         else:
-            print(f'[INFO] email alert skipped. Last email was {email_interval:.2f} seconds ago.')
+            print('[INFO] email alert skipped. Last email was %s seconds ago.' % email_interval)
     except Exception as e:
         print('[ERROR] sending alert email failed: ', str(e))
 

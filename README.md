@@ -9,7 +9,7 @@ Security feature to detect people in surveillance frame and notify user. Images 
 
 ## Software Requirements
 - Raspbian Stretch
-- Python 3
+- Python 3.5
 - OpenCV 3
 
 ## Install Instructions
