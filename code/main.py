@@ -79,7 +79,7 @@ def alert_email(path_local, pred, score, interval=1800):
         sender = config['email']['sender']
         receiver = config['email']['receiver'].split(',')
         subject = 'ALARM - Human spotted in the residence !'
-        body = f'The following objects were detected: {str(pred)} with the following likelihood: {str(score)}. See the image here: {str(img_url)}'
+        body = 'The following objects were detected: %s with the following likelihood: %s. See the image here: %s' % (str(pred), str(score), str(img_url))
 
         email_text = """Subject: %s
 
