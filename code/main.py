@@ -56,12 +56,13 @@ def init(fp_deploy, fp_model):
     except Exception as e:
         print('[ERROR] loading model failed: ', str(e))
 
-def upload(path_local, container_name):
+def upload(path_local, container_name, remove=True):
     """Upload image to Azure Blob Storage"""
     try:
         fn = path_local.split('/')[-1]
         block_blob_service.create_blob_from_path(config['blob'][container_name], fn, path_local)
-        os.remove(path_local)
+        if remove:
+            os.remove(path_local)
         print('[INFO] Uploaded image to blob storage: ', container_name)
     except Exception as e:
         print('[ERROR] Uploading image failed: ', str(e), ' >> Image stored locally.')
@@ -100,16 +101,15 @@ def alert_email(path_local, pred, score, interval=1800):
     except Exception as e:
         print('[ERROR] sending alert email failed: ', str(e))
 
-def alert(frame, pred, score, threshold=0.4):
+def alert(frame, pred, score):
     """Evaluate frame for need to send alert"""
     global timer_last
     try:
         now = str(time.time())
-        # Step 1 - check for person (TODO: or change?)
+        # Step 1 - check for person
         ## a. check for person
-        if ('person' in pred) & (score > threshold):
-            
-            print('person detected')
+        if 'person' in pred:
+            print('[INFO] person detected')
             fr = capture(rpi=True, resize=False)
 
             fn_img_person = fp_img_local + now + '_person.jpg'
@@ -118,12 +118,13 @@ def alert(frame, pred, score, threshold=0.4):
             upload(fn_img_person, 'container-person')
 
             ## Take better resolution image:
-            fn_img_person = fp_img_local + now + '_person2.jpg'
+            fn_img_person = fp_img_local + now + '_person_full.jpg'
             cv2.imwrite(fn_img_person, fr)
-            upload(fn_img_person, 'container-person')
+            upload(fn_img_person, 'container-person', remove=False)
 
             # Step 3 - send alert email
             alert_email(fn_img_person, pred, score)
+            
         ## b. upload based on timer
         fn_img_time = fp_img_local + now + '_time.jpg'
         if timer_last is None:
@@ -206,14 +207,14 @@ def score():
         frame = capture(rpi=True)
 
         # Detect Objects
-        f, r, s = detect(frame, net, CLASSES, COLORS, conf = 0.2)
+        f, r, s = detect(frame, net, CLASSES, COLORS, conf = 0.4)
 
         # Process results
         alert(f,r,s)
 
         print('[INFO] loop complete: ', r ,s, str(time.time()))
         ##Timer buffer
-        time.sleep(11)
+        time.sleep(16)
 
 if __name__ == "__main__":
     score()

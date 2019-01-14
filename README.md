@@ -36,3 +36,4 @@ sudo python3 /home/pi/Desktop/SecurityHub/code/main.py &
 # DONE
 - Interval for email alerts, after first alert was sent
 - Threshold for person detection
+- Remove images from local storage
