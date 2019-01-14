@@ -79,8 +79,7 @@ def alert_email(path_local, pred, score, interval=1800):
         sender = config['email']['sender']
         receiver = config['email']['receiver'].split(',')
         subject = 'ALARM - Human spotted in the residence !'
-        body = f'The following objects were detected: {str(pred)} with the following likelihood: {str(score)}. \
-        See the image here: {str(img_url)}'
+        body = f'The following objects were detected: {str(pred)} with the following likelihood: {str(score)}. See the image here: {str(img_url)}'
 
         email_text = """Subject: %s
 
@@ -124,7 +123,7 @@ def alert(frame, pred, score):
 
             # Step 3 - send alert email
             alert_email(fn_img_person, pred, score)
-            
+
         ## b. upload based on timer
         fn_img_time = fp_img_local + now + '_time.jpg'
         if timer_last is None:
