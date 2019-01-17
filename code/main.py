@@ -67,7 +67,7 @@ def upload(path_local, container_name, remove=True):
     except Exception as e:
         print('[ERROR] Uploading image failed: ', str(e), ' >> Image stored locally.')
 
-def alert_email(path_local, pred, score, interval=1800):
+def alert_email(path_local, pred, score):
     """Send an alert message via email about potential intruders.
     
     Set the interval in which emails after the first are ignored, in seconds.
@@ -86,23 +86,20 @@ def alert_email(path_local, pred, score, interval=1800):
         %s
         """ % (subject, body)
         
-        email_interval = time.time() - email_last
-        if email_interval > interval:
-            # Send Email
-            server = smtplib.SMTP_SSL(config['email']['server'], 465)
-            server.ehlo()
-            server.login(sender, config['email']['key'])
-            server.sendmail(sender, receiver, email_text)
-            server.close()
-            print('[INFO] sent email alert')
-        else:
-            print('[INFO] email alert skipped. Last email was %s seconds ago.' % email_interval)
+        # Send Email
+        server = smtplib.SMTP_SSL(config['email']['server'], 465)
+        server.ehlo()
+        server.login(sender, config['email']['key'])
+        server.sendmail(sender, receiver, email_text)
+        server.close()
+        print('[INFO] sent email alert')
+        
     except Exception as e:
         print('[ERROR] sending alert email failed: ', str(e))
 
-def alert(frame, pred, score):
+def alert(frame, pred, score, interval=1800):
     """Evaluate frame for need to send alert"""
-    global timer_last
+    global timer_last, email_last
     try:
         now = str(time.time())
         # Step 1 - check for person
@@ -122,8 +119,12 @@ def alert(frame, pred, score):
             upload(fn_img_person, 'container-person', remove=False)
 
             # Step 3 - send alert email
-            alert_email(fn_img_person, pred, score)
-
+            email_interval = time.time() - email_last
+            if email_interval > interval:
+                alert_email(fn_img_person, pred, score)
+                email_last = time.time()
+            else:
+                print('[INFO] email alert skipped. Last email was %s seconds ago.' % email_interval)
         ## b. upload based on timer
         fn_img_time = fp_img_local + now + '_time.jpg'
         if timer_last is None:
