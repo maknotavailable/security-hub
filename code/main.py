@@ -107,7 +107,7 @@ def alert(frame, pred, score, interval=1800):
         ## a. check for person
         if 'person' in pred:
             print('[INFO] person detected')
-            fr = capture(rpi=True, resize=False)
+            fr = camera.capture(resize=False)
 
             fn_img_person = fp_img_local + now + '_person.jpg'
             cv2.imwrite(fn_img_person, frame)
@@ -141,7 +141,7 @@ def alert(frame, pred, score, interval=1800):
         print('[ERROR] While evaluating alert: ', str(e))
 
 def score():
-    global timer_start
+    global timer_start, camera
 
     # Initialize run
     init(fp_deploy, fp_model)
