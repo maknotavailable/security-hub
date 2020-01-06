@@ -18,6 +18,7 @@ import smtplib
 
 # Load custom functions
 from detect_person import detect
+import camera as pica
 
 ## INIT ##
 # Load model
@@ -139,74 +140,21 @@ def alert(frame, pred, score, interval=1800):
     except Exception as e:
         print('[ERROR] While evaluating alert: ', str(e))
 
-def capture(rpi, resize=True):
-    """Capture images using Rasperry Pi Camera
-    -TODO: convert to class. For multiple shots without sleeping camera.
-    """
-    try:
-        if rpi:
-            from picamera import PiCamera
-            # IO Stream
-            stream = io.BytesIO()
-            with PiCamera() as camera:
-                # Start Camera Stream
-                camera.start_preview()
-                ## Allow camera to warm up
-                time.sleep(4)
-                # Image to stream
-                camera.rotation = 180
-                if resize:
-                    camera.capture(stream, format='jpeg', resize=(400,400))
-                else:
-                    camera.capture(stream, format='jpeg')
-                
-                # ## NOTE: for testing only ##
-                # # Store image
-                # fn_img_local = fp_img_local + str(time.time()) + '.jpg'
-                # camera.capture(fn_img_local)
-                # # upload image to blbo
-                # upload(fn_img_local, 'container-time')
-                # # send alert email
-                # alert_email(fn_img_local, 'test', 'nada')
-
-            # Construct a numpy array from the stream
-            data = np.fromstring(stream.getvalue(), dtype=np.uint8)
-            # "Decode" the image from the array, preserving colour
-            frame = cv2.imdecode(data, 1)
-        else:
-            ##NOTE: FOR LOCAL DEBUGGING
-            # grab the frame from the threaded video stream and resize it
-            # to have a maximum width of 400 pixels
-            from imutils.video import VideoStream
-            from imutils.video import FPS
-            # Load video stream
-            #vs = VideoStream(src=0).start()
-            vs = VideoStream(usePiCamera=True).start() ##NOTE: if using RPi
-            time.sleep(2.0)
-            # Read image
-            frame = vs.read()
-            # Resize frame
-            frame = imutils.resize(frame, width=400)
-            # Stop Recording
-            vs.stop()
-
-    except Exception as e:
-        frame = None
-        print('[ERROR] image capture failed: ' ,str(e))
-
-    return frame
-
 def score():
     global timer_start
+
     # Initialize run
     init(fp_deploy, fp_model)
+
+    # Load camera
+    camera = pica.Image(rpi=True)
 
     while True:
         # Start timer
         timer_start = datetime.datetime.now() 
 
         # Capture image
-        frame = capture(rpi=True)
+        frame = camera.capture(resize=True)
 
         # Detect Objects
         f, r, s = detect(frame, net, CLASSES, COLORS, conf = 0.4)
@@ -214,7 +162,7 @@ def score():
         # Process results
         alert(f,r,s)
 
-        print('[INFO] loop complete: ', r ,s, str(time.time()))
+        print('[INFO] loop complete: ', r, s, str(time.time()))
         ##Timer buffer
         time.sleep(5)
 
