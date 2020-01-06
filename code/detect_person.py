@@ -50,7 +50,7 @@ def detect(frame, net, CLASSES, COLORS, conf=0.2, display=False):
                 cv2.putText(frame, label, (startX, y),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
 
-    if diplay:
+    if display:
         # show the output frame
         cv2.imshow("Frame", frame)
         time.sleep(5)
