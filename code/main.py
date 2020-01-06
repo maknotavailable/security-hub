@@ -140,7 +140,9 @@ def alert(frame, pred, score, interval=1800):
         print('[ERROR] While evaluating alert: ', str(e))
 
 def capture(rpi, resize=True):
-    """Capture images using Rasperry Pi Camera"""
+    """Capture images using Rasperry Pi Camera
+    -TODO: convert to class. For multiple shots without sleeping camera.
+    """
     try:
         if rpi:
             from picamera import PiCamera
@@ -214,7 +216,7 @@ def score():
 
         print('[INFO] loop complete: ', r ,s, str(time.time()))
         ##Timer buffer
-        time.sleep(16)
+        time.sleep(5)
 
 if __name__ == "__main__":
     score()

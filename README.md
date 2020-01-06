@@ -33,6 +33,8 @@ sudo python3 /home/pi/Desktop/SecurityHub/code/main.py &
 - Date based switch to turn camera on/off (google calendar integration)
 - Change detection, to not score every image
 - Connection with CCTV
+- Product Setup (via App/Web)
+- Convert to class: keep camera loaded
 # DONE
 - Interval for email alerts, after first alert was sent
 - Threshold for person detection
