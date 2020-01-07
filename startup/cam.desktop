@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=CamServer
+Comment=
+Exec=lxterminal -e /home/pi/Desktop/SecurityHub/startup/cam-start.sh
+Icon=lxterminal
+Terminal=true
+Type=Application

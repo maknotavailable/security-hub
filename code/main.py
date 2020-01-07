@@ -1,9 +1,11 @@
-## SCRIPT TO DETECT PEOPLE IN IMAGE FRAMES, on RPI
-# 1. start camera, snapshot at interval
-# 2. score image
-# 3. post-process
-### a. if object detected: store image (blob), send message
-### b. if none detected: store every Xth image (blob)
+"""
+SCRIPT TO DETECT PEOPLE IN IMAGE FRAMES, on RPI
+1. start camera, snapshot at interval
+2. score image
+3. post-process
+ a. if object detected: store image (blob), send message
+ b. if none detected: store every Xth image (blob)
+"""
 
 import os
 import cv2
@@ -15,8 +17,9 @@ import configparser
 import imutils
 from azure.storage.blob import BlockBlobService
 import smtplib
+import argparse
 
-# Load custom functions
+# Custom functions
 from detect_person import detect
 import camera as pica
 
@@ -142,12 +145,26 @@ def alert(frame, pred, score, interval=1800):
 
 def score():
     global timer_start, camera
+    ## Run arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--not_rpi',
+                    action='store_false',
+                    help="If non RPI device is used (for testing only)")
+    parser.add_argument("--interval", 
+                    default=5,
+                    type=int,
+                    help="Seconds between inferred frames.")      
+    parser.add_argument("--confidence", 
+                    default=0.4,
+                    type=float,
+                    help="Seconds between inferred frames.")        
+    args = parser.parse_args()
 
     # Initialize run
     init(fp_deploy, fp_model)
 
     # Load camera
-    camera = pica.Image(rpi=True)
+    camera = pica.Image(rpi=args.not_rpi)
 
     while True:
         # Start timer
@@ -157,14 +174,14 @@ def score():
         frame = camera.capture(resize=True)
 
         # Detect Objects
-        f, r, s = detect(frame, net, CLASSES, COLORS, conf = 0.4)
+        f, r, s = detect(frame, net, CLASSES, COLORS, conf = args.confidence)
 
         # Process results
         alert(f,r,s)
-
         print('[INFO] loop complete: ', r, s, str(time.time()))
+        
         ##Timer buffer
-        time.sleep(5)
+        time.sleep(args.interval)
 
 if __name__ == "__main__":
     score()

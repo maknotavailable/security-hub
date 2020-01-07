@@ -18,24 +18,27 @@ https://www.raspberrypi.org/downloads/noobs/
 - Install OpenCV   
 https://www.pyimagesearch.com/2018/09/19/pip-install-opencv/  
 - Install some additional dependencies  
-sudo apt-get install libatlas-base-dev  
-sudo apt-get install libjasper-dev  
-sudo apt-get install libqtgui4  
-sudo apt-get install python3-pyqt5  
+> sudo apt-get install libatlas-base-dev  
+> sudo apt-get install libjasper-dev  
+> sudo apt-get install libqtgui4  
+> sudo apt-get install python3-pyqt5  
 
-## Run on Startup
-Add the following to your /etc/rc.local file:
-/usr/bin/tvservice -o (-p to re-enable)
-sudo python3 /home/pi/Desktop/SecurityHub/code/main.py &
+## TeamViewer Update
+Run apt-get update, then:
+> sudo apt --fix-broken install
+> teamviewer info
 
 # TODO
-- Implement run on startup
+Sorted by priority.
 - Date based switch to turn camera on/off (google calendar integration)
 - Change detection, to not score every image
-- Connection with CCTV
 - Product Setup (via App/Web)
-- Convert to class: keep camera loaded
+- Frontend Image Viewer
+- Connection with CCTV
+
 # DONE
+- Implement run on startup
+- Convert to class: keep camera loaded
 - Interval for email alerts, after first alert was sent
 - Threshold for person detection
 - Remove images from local storage
