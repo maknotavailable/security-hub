@@ -25,20 +25,24 @@ https://www.pyimagesearch.com/2018/09/19/pip-install-opencv/
 
 ## TeamViewer Update
 Run apt-get update, then:
-> sudo apt --fix-broken install
+> sudo apt --fix-broken install  
 > teamviewer info
 
-# TODO
-Sorted by priority.
+# VERSIONS
+## V1.0 [in development]
+- Improve email sending security
 - Date based switch to turn camera on/off (google calendar integration)
 - Change detection, to not score every image
+- Web logging
 - Product Setup (via App/Web)
+
+## Vnext
 - Frontend Image Viewer
 - Connection with CCTV
 
-# DONE
-- Implement run on startup
-- Convert to class: keep camera loaded
-- Interval for email alerts, after first alert was sent
-- Threshold for person detection
-- Remove images from local storage
+## V0.1 [DONE]
+- [2020-01-07] Implement run on startup
+- [2020-01-06] Convert to class: keep camera loaded
+- [2019-01-17] Interval for email alerts, after first alert was sent
+- [2019-01-14] Threshold for person detection
+- [2018-11-30] Remove images from local storage
