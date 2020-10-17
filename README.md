@@ -1,8 +1,9 @@
-# SecurityHub
+# Security Hub
 Raspberry Pi based security hub.
 
 Security feature to detect people in surveillance frame and notify user. Images are stored in Azure Blob Storage. 
 
+# REQUIREMENTS
 ## Hardware Requirements
 - Raspberry Pi 3 B+
 - Raspberry Pi Camera Module
@@ -12,6 +13,7 @@ Security feature to detect people in surveillance frame and notify user. Images 
 - Python 3.5
 - OpenCV 3
 
+# INSTRUCTIONS
 ## Install Instructions
 - Install Raspbian Stretch via NOOBS  
 https://www.raspberrypi.org/downloads/noobs/  
@@ -29,18 +31,17 @@ Run apt-get update, then:
 > teamviewer info
 
 # VERSIONS
-## V1.0 [in development]
+## TODO
 - Improve email sending security
 - Date based switch to turn camera on/off (google calendar integration)
 - Change detection, to not score every image
 - Web logging
 - Product Setup (via App/Web)
-
-## Vnext
+- Email notification via API service
 - Frontend Image Viewer
-- Connection with CCTV
+- Migrate storage to AWS S3 Bucket
 
-## V0.1 [DONE]
+## DONE
 - [2020-01-07] Implement run on startup
 - [2020-01-06] Convert to class: keep camera loaded
 - [2019-01-17] Interval for email alerts, after first alert was sent
