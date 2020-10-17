@@ -1,5 +1,5 @@
-
 numpy
 opencv-contrib-python
 imutils
-azure-storage
+# azure-storage
+boto3

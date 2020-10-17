@@ -15,9 +15,14 @@ import time
 import datetime
 import configparser
 import imutils
-from azure.storage.blob import BlockBlobService
 import smtplib
 import argparse
+import logging
+
+# Format logging
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
+                            format = '%(asctime)s - %(levelname)s - %(name)s -   %(message)s')
 
 # Custom functions
 from detect_person import detect
@@ -35,7 +40,7 @@ email_last = time.time()
 
 def init(fp_deploy, fp_model):
     """Load model and dependencies"""
-    global CLASSES, COLORS, net, block_blob_service, config
+    global CLASSES, COLORS, net, config
     try:
         # Load config file
         config = configparser.ConfigParser()
@@ -50,26 +55,11 @@ def init(fp_deploy, fp_model):
         COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
         # load our serialized model from disk
-        print("[INFO] loading model...")
+        log.info("loading model...")
         net = cv2.dnn.readNetFromCaffe(fp_deploy, fp_model)
 
-        # prepare blob connection
-        # Create the BlockBlockService that is used to call the Blob service for the storage account
-        block_blob_service = BlockBlobService(account_name=config['blob']['account'], account_key=config['blob']['key'])
-
     except Exception as e:
-        print('[ERROR] loading model failed: ', str(e))
-
-def upload(path_local, container_name, remove=True):
-    """Upload image to Azure Blob Storage"""
-    try:
-        fn = path_local.split('/')[-1]
-        block_blob_service.create_blob_from_path(config['blob'][container_name], fn, path_local)
-        if remove:
-            os.remove(path_local)
-        print('[INFO] Uploaded image to blob storage: ', container_name)
-    except Exception as e:
-        print('[ERROR] Uploading image failed: ', str(e), ' >> Image stored locally.')
+        log.error('loading model failed: %s' % e)
 
 def alert_email(path_local, pred, score):
     """Send an alert message via email about potential intruders.
@@ -96,10 +86,10 @@ def alert_email(path_local, pred, score):
         server.login(sender, config['email']['key'])
         server.sendmail(sender, receiver, email_text)
         server.close()
-        print('[INFO] sent email alert')
+        log.info(' sent email alert')
         
     except Exception as e:
-        print('[ERROR] sending alert email failed: ', str(e))
+        log.error(' sending alert email failed: %s' % e)
 
 def alert(frame, pred, score, interval=1800):
     """Evaluate frame for need to send alert"""
@@ -109,18 +99,18 @@ def alert(frame, pred, score, interval=1800):
         # Step 1 - check for person
         ## a. check for person
         if 'person' in pred:
-            print('[INFO] person detected')
+            log.info('person detected')
             fr = camera.capture(resize=False)
 
             fn_img_person = fp_img_local + now + '_person.jpg'
             cv2.imwrite(fn_img_person, frame)
             # Step 2 - upload image to blob
-            upload(fn_img_person, 'container-person')
+            # upload(fn_img_person, 'container-person')
 
             ## Take better resolution image:
             fn_img_person = fp_img_local + now + '_person_full.jpg'
             cv2.imwrite(fn_img_person, fr)
-            upload(fn_img_person, 'container-person', remove=False)
+            # upload(fn_img_person, 'container-person', remove=False)
 
             # Step 3 - send alert email
             email_interval = time.time() - email_last
@@ -128,20 +118,20 @@ def alert(frame, pred, score, interval=1800):
                 alert_email(fn_img_person, pred, score)
                 email_last = time.time()
             else:
-                print('[INFO] email alert skipped. Last email was %s seconds ago.' % email_interval)
+                log.info('email alert skipped. Last email was %s seconds ago.' % email_interval)
         ## b. upload based on timer
         fn_img_time = fp_img_local + now + '_time.jpg'
         if timer_last is None:
             cv2.imwrite(fn_img_time, frame)
             timer_last = datetime.datetime.now()
-            upload(fn_img_time, 'container-time')
+            # upload(fn_img_time, 'container-time')
         elif abs((timer_last - timer_start).total_seconds()) > 3600:
             cv2.imwrite(fn_img_time, frame)
             timer_last = datetime.datetime.now()
-            upload(fn_img_time, 'container-time')
+            # upload(fn_img_time, 'container-time')
 
     except Exception as e:
-        print('[ERROR] While evaluating alert: ', str(e))
+        log.error('While evaluating alert: %s' % e)
 
 def score():
     global timer_start, camera
@@ -178,7 +168,7 @@ def score():
 
         # Process results
         alert(f,r,s)
-        print('[INFO] loop complete: ', r, s, str(time.time()))
+        log.info('loop complete: %s - %s - %s ' % (r, s, time.time()))
         
         ##Timer buffer
         time.sleep(args.interval)

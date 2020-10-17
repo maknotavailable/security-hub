@@ -5,7 +5,12 @@ import numpy as np
 import imutils
 import time
 import cv2
+import logging
 
+# Format logging
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
+                            format = '%(asctime)s - %(levelname)s - %(name)s -   %(message)s')
 
 fp_deploy = '../model/MobileNetSSD_deploy.prototxt'
 fp_model = '../model/MobileNetSSD_deploy.caffemodel'
@@ -19,12 +24,12 @@ CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
 COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 # load our serialized model from disk
-print("[INFO] loading model...")
+log.info(" loading model...")
 net = cv2.dnn.readNetFromCaffe(fp_deploy, fp_model)
 
 # initialize the video stream, allow the camera sensor to warm up,
 # and initialize the FPS counter
-print("[INFO] starting video stream...")
+log.info(" starting video stream...")
 vs = VideoStream(src=0).start()
 # vs = VideoStream(usePiCamera=True).start()
 time.sleep(2.0)
@@ -83,8 +88,8 @@ while True:
 
 # stop the timer and display FPS information
 fps.stop()
-print("[INFO] elapsed time: {:.2f}".format(fps.elapsed()))
-print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+log.info(" elapsed time: {:.2f}".format(fps.elapsed()))
+log.info(" approx. FPS: {:.2f}".format(fps.fps()))
 
 # do a bit of cleanup
 cv2.destroyAllWindows()

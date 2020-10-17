@@ -42,6 +42,8 @@ Run apt-get update, then:
 - Migrate storage to AWS S3 Bucket
 
 ## DONE
+- [2020-08-17] Updated Logging
+### v0.1
 - [2020-01-07] Implement run on startup
 - [2020-01-06] Convert to class: keep camera loaded
 - [2019-01-17] Interval for email alerts, after first alert was sent

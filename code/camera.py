@@ -5,6 +5,12 @@ import numpy as np
 import time
 import datetime
 import imutils
+import logging
+
+# Format logging
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
+                            format = '%(asctime)s - %(levelname)s - %(name)s -   %(message)s')
 
 class Image():
     def __init__(self, rpi=True):
@@ -48,7 +54,7 @@ class Image():
 
         except Exception as e:
             frame = None
-            print('[ERROR] image capture failed: ', str(e))
+            log.error('image capture failed: %s' % e)
 
         return frame
 
@@ -106,6 +112,6 @@ class Image():
 
         except Exception as e:
             frame = None
-            print('[ERROR] image capture failed: ' ,str(e))
+            log.error('image capture failed: %s' % e)
 
         return frame
