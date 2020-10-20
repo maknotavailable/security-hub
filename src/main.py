@@ -6,7 +6,6 @@ SCRIPT TO DETECT PEOPLE IN IMAGE FRAMES, on RPI
  a. if object detected: store image (blob), send message
  b. if none detected: store every Xth image (blob)
 """
-
 import os
 import cv2
 import io
@@ -27,6 +26,8 @@ logging.basicConfig(level=logging.INFO,
 # Custom functions
 from detect_person import detect
 import camera as pica
+import notification
+# import storage
 
 ## INIT ##
 # Load model
@@ -37,6 +38,10 @@ fp_img_local = '/home/pi/Desktop/Security/'
 # Timer Last
 timer_last = None
 email_last = time.time()
+# Email server
+email = notification.Email()
+# Storage server
+# store = storage.Cloud()
 
 def init(fp_deploy, fp_model):
     """Load model and dependencies"""
@@ -66,36 +71,22 @@ def alert_email(path_local, pred, score):
     
     Set the interval in which emails after the first are ignored, in seconds.
     """
-    try:
-        # Prepare Email
-        fn = path_local.split('/')[-1]
-        img_url = config['blob']['link-person'] + fn
-        sender = config['email']['sender']
-        receiver = config['email']['receiver'].split(',')
-        subject = 'ALARM - Human spotted in the residence !'
-        body = 'The following objects were detected: %s with the following likelihood: %s. See the image here: %s' % (str(pred), str(score), str(img_url))
-
-        email_text = """Subject: %s
-
-        %s
-        """ % (subject, body)
-        
-        # Send Email
-        server = smtplib.SMTP_SSL(config['email']['server'], 465)
-        server.ehlo()
-        server.login(sender, config['email']['key'])
-        server.sendmail(sender, receiver, email_text)
-        server.close()
-        log.info(' sent email alert')
-        
-    except Exception as e:
-        log.error(' sending alert email failed: %s' % e)
+    # Prepare email
+    # fn = path_local.split('/')[-1]
+    # img_url = config['blob']['link-person'] + fn
+    subject = 'ALARM - Human spotted in the residence !'
+    body = 'The following objects were detected: %s with the following likelihood: %s. See the image here: %s' % (str(pred), str(score), str(img_url))
+    
+    # Send email
+    email.send(subject, body)
 
 def alert(frame, pred, score, interval=1800):
     """Evaluate frame for need to send alert"""
     global timer_last, email_last
     try:
-        now = str(time.time())
+        # Format date in human readable format
+        now = ":".join(str(datetime.now()).split(":")[:2])
+
         # Step 1 - check for person
         ## a. check for person
         if 'person' in pred:

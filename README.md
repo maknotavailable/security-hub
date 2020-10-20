@@ -32,16 +32,16 @@ Run apt-get update, then:
 
 # VERSIONS
 ## TODO
-- Improve email sending security
+- Enable storage to AWS S3 Bucket
+- Image Gallery Viewer
+
 - Date based switch to turn camera on/off (google calendar integration)
 - Change detection, to not score every image
 - Web logging
 - Product Setup (via App/Web)
-- Email notification via API service
-- Frontend Image Viewer
-- Migrate storage to AWS S3 Bucket
 
 ## DONE
+- [2020-08-20] Emails via AWS SES
 - [2020-08-17] Updated Logging
 ### v0.1
 - [2020-01-07] Implement run on startup
