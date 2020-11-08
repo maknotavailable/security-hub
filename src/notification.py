@@ -37,7 +37,7 @@ class Email():
         # Try to send the email.
         try:
             #Provide the contents of the email.
-            response = client.send_email(
+            response = self.client.send_email(
                 Destination={
                     'ToAddresses': self.RECEIVERS
                 },
