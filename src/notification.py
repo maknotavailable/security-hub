@@ -14,9 +14,9 @@ class Email():
     def __init__(self):
         """Authenticate email server and prepare configuration"""
         # AWS access
-        ACCESS_KEY = utils.get_secret("key_id", "aws")
-        SECRET_KEY = utils.get_secret("secret", "aws")
-        AWS_REGION = "eu-central-1"
+        ACCESS_KEY = utils.get_secret("ACCESS_KEY_ID", "aws")
+        SECRET_KEY = utils.get_secret("SECRET_ACCESS_KEY", "aws")
+        AWS_REGION = utils.get_secret("REGION", "aws")
 
         # Create a new SES resource and specify a region.
         self.client = b3.client('ses',

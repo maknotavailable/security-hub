@@ -11,7 +11,7 @@ import cv2
 import io
 import numpy as np
 import time
-import datetime
+from datetime import datetime
 import configparser
 import imutils
 import smtplib
@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO,
 from detect_person import detect
 import camera as pica
 import notification
-# import storage
+import storage
 
 ## INIT ##
 # Load model
@@ -41,7 +41,7 @@ email_last = time.time()
 # Email server
 email = notification.Email()
 # Storage server
-# store = storage.Cloud()
+store = storage.Cloud("s3")
 
 def init(fp_deploy, fp_model):
     """Load model and dependencies"""
@@ -66,16 +66,14 @@ def init(fp_deploy, fp_model):
     except Exception as e:
         log.error('loading model failed: %s' % e)
 
-def alert_email(path_local, pred, score):
+def alert_email(url, pred, score):
     """Send an alert message via email about potential intruders.
     
     Set the interval in which emails after the first are ignored, in seconds.
     """
     # Prepare email
-    # fn = path_local.split('/')[-1]
-    # img_url = config['blob']['link-person'] + fn
     subject = 'ALARM - Human spotted in the residence !'
-    body = 'The following objects were detected: %s with the following likelihood: %s. See the image here: %s' % (str(pred), str(score), str(img_url))
+    body = 'The following objects were detected: %s with the following likelihood: %s. See the image here: %s' % (str(pred), str(score), str(url))
     
     # Send email
     email.send(subject, body)
@@ -86,6 +84,7 @@ def alert(frame, pred, score, interval=1800):
     try:
         # Format date in human readable format
         now = ":".join(str(datetime.now()).split(":")[:2])
+        now = now.replace(" ", "_")
 
         # Step 1 - check for person
         ## a. check for person
@@ -96,17 +95,18 @@ def alert(frame, pred, score, interval=1800):
             fn_img_person = fp_img_local + now + '_person.jpg'
             cv2.imwrite(fn_img_person, frame)
             # Step 2 - upload image to blob
-            # upload(fn_img_person, 'container-person')
+            store.upload(fn_img_person, 'container-person')
 
             ## Take better resolution image:
             fn_img_person = fp_img_local + now + '_person_full.jpg'
             cv2.imwrite(fn_img_person, fr)
-            # upload(fn_img_person, 'container-person', remove=False)
+            _s3_res = store.upload(fn_img_person, 'container-person', remove=False)
 
             # Step 3 - send alert email
             email_interval = time.time() - email_last
             if email_interval > interval:
-                alert_email(fn_img_person, pred, score)
+                url = _s3_res.get("url")
+                alert_email(url, pred, score)
                 email_last = time.time()
             else:
                 log.info('email alert skipped. Last email was %s seconds ago.' % email_interval)
@@ -114,12 +114,12 @@ def alert(frame, pred, score, interval=1800):
         fn_img_time = fp_img_local + now + '_time.jpg'
         if timer_last is None:
             cv2.imwrite(fn_img_time, frame)
-            timer_last = datetime.datetime.now()
-            # upload(fn_img_time, 'container-time')
+            timer_last = datetime.now()
+            store.upload(fn_img_time, 'container-time')
         elif abs((timer_last - timer_start).total_seconds()) > 3600:
             cv2.imwrite(fn_img_time, frame)
-            timer_last = datetime.datetime.now()
-            # upload(fn_img_time, 'container-time')
+            timer_last = datetime.now()
+            store.upload(fn_img_time, 'container-time')
 
     except Exception as e:
         log.error('While evaluating alert: %s' % e)
@@ -149,7 +149,7 @@ def score():
 
     while True:
         # Start timer
-        timer_start = datetime.datetime.now() 
+        timer_start = datetime.now() 
 
         # Capture image
         frame = camera.capture(resize=True)
