@@ -95,7 +95,7 @@ class Cloud():
         elif self.destination == "s3":
             res = self._upload_s3(fn, foldername)
         else:
-            raise Exception("Cloud storage provider %s is not supported." % destination)
+            raise Exception("Cloud storage provider %s is not supported." % self.destination)
 
         if remove:
             os.remove(filepath)
