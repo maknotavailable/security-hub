@@ -89,8 +89,8 @@ def alert(frame, pred, score, interval=1800):
         # Step 1 - check for person
         ## a. check for person
         if 'person' in pred:
-            log.info('person detected')
-            fr = camera.capture(resize=False)
+            log.info('PERSON DETECTED. Taking full resolution picture.')
+            frame_hr = camera.capture(resize=False)
 
             fn_img_person = fp_img_local + now + '_person.jpg'
             cv2.imwrite(fn_img_person, frame)
@@ -98,8 +98,8 @@ def alert(frame, pred, score, interval=1800):
             store.upload(fn_img_person, 'container-person')
 
             ## Take better resolution image:
-            fn_img_person = fp_img_local + now + '_person_full.jpg'
-            cv2.imwrite(fn_img_person, fr)
+            fn_img_person = fp_img_local + now + '_person_hr.jpg'
+            cv2.imwrite(fn_img_person, frame_hr)
             _s3_res = store.upload(fn_img_person, 'container-person', remove=False)
 
             # Step 3 - send alert email
