@@ -40,14 +40,14 @@ def get_secret(name, section = None):
 
     if config is not None and name in config:
         # Get secret from local config
-        log.info(f'Getting secret from config: {name}')
+        log.info('Getting secret from config: %s' % name)
         value = config[name]
     elif name in os.environ:
         # Get secret from environment variable
-        log.info(f'Getting secret from environment: {name}')
+        log.info('Getting secret from environment: %s' % name)
         value = os.environ[name]
 
     if value is None:
-        raise Exception(f'The secret {name} was not found via utils.get_secret().')
+        raise Exception('The secret %s was not found via utils.get_secret().' % name)
 
     return value
