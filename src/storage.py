@@ -47,53 +47,44 @@ class Cloud():
             log.error(
                 "Cloud storage provider %s is not supported. Use 's3' or 'blob' instead." % destination)
 
-    def _upload_blob(self, filename, foldername):
+    def _upload_blob(self, fp, fn, foldername):
         pass
         # try:
-        #     fn = filename.split('/')[-1]
         #     self.block_blob_service.create_blob_from_path(
-        #         config['blob'][container_name], fn, filepath)
+        #         config['blob'][container_name], fn, fp)
         # except Exception as e:
         #     log.error(' Uploading image failed: %s >> Image stored locally.' % e)
         # else:
         #     log.info('Uploaded image to blob storage: %s' % container_name)
 
-    def _upload_s3(self, filename, foldername):
-        file_type = "jpg"
-        filename = foldername + "/" + filename
+    def _upload_s3(self, fp, fn, foldername):
+        filename = foldername + "/" + fn
 
         # Upload to S3 Bucket on AWS
-        # try:
-        presigned_post = self.client.generate_presigned_post(
-            Bucket=self.S3_BUCKET,
-            Key=filename,
-            Fields={"acl": "public-read", "Content-Type": file_type},
-            Conditions=[
-                {"acl": "public-read"},
-                {"Content-Type": file_type}
-            ],
-            ExpiresIn=3600
-        )
-        return dict(
-            data=presigned_post,
-            url='https://%s.s3.amazonaws.com/%s' % (self.S3_BUCKET, filename)
-        )
-        # except Exception as e:
-    #             log.error(' Uploading image failed: %s >> Image stored locally.' % e)
+        try:
+            with open(fp, 'rb') as data:
+                self.client.upload_fileobj(data, self.S3_BUCKET, filename)
+            
+            log.info('Uploaded image to: %s' % filename)
+            return dict(
+                url='https://%s.s3.amazonaws.com/%s' % (self.S3_BUCKET, filename)
+            )
+        except Exception as e:
+            log.error('Uploading image failed: %s >> Image stored locally.' % e)
 
     def upload(self, filepath: str, foldername: str, remove: bool = True):
         """Orchestrate upload to cloud provider"""
 
         fn = filepath.split('/')[-1]
         res = dict(
-            url=fn
+            url = fn
         )
 
         if self.destination == "blob":
-            self._upload_blob(fn, foldername)
+            self._upload_blob(filepath, fn, foldername)
 
         elif self.destination == "s3":
-            res = self._upload_s3(fn, foldername)
+            res = self._upload_s3(filepath, fn, foldername)
         else:
             raise Exception("Cloud storage provider %s is not supported." % self.destination)
 
