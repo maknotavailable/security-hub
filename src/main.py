@@ -66,7 +66,7 @@ def init(fp_deploy, fp_model):
     except Exception as e:
         log.error('loading model failed: %s' % e)
 
-def alert_email(url, pred, score):
+def email_alert(url, pred, score):
     """Send an alert message via email about potential intruders.
     
     Set the interval in which emails after the first are ignored, in seconds.
@@ -74,6 +74,16 @@ def alert_email(url, pred, score):
     # Prepare email
     subject = 'ALARM - Human spotted in the residence !'
     body = 'The following objects were detected: %s with the following likelihood: %s. See the image here: %s' % (str(pred), str(score), str(url))
+    
+    # Send email
+    email.send(subject, body)
+
+def email_startup(url):
+    """Send an notification message via email notifying about the system startup.
+    """
+    # Prepare email
+    subject = 'INFO - Security system is up and running'
+    body = 'Nothing to worry about. This message is sent after the security system starts up. Take a peak: %s' % str(url)
     
     # Send email
     email.send(subject, body)
@@ -106,7 +116,7 @@ def alert(frame, pred, score, interval=1800):
             email_interval = time.time() - email_last
             if email_interval > interval:
                 url = _s3_res.get("url")
-                alert_email(url, pred, score)
+                email_alert(url, pred, score)
                 email_last = time.time()
             else:
                 log.info('email alert skipped. Last email was %s seconds ago.' % email_interval)
@@ -115,7 +125,10 @@ def alert(frame, pred, score, interval=1800):
         if timer_last is None:
             cv2.imwrite(fn_img_time, frame)
             timer_last = datetime.now()
-            store.upload(fn_img_time, 'container-time')
+            _s3_res = store.upload(fn_img_time, 'container-time')
+            ### Startup email notification
+            url = _s3_res.get("url")
+            email_startup(url)
         elif abs((timer_last - timer_start).total_seconds()) > 3600:
             cv2.imwrite(fn_img_time, frame)
             timer_last = datetime.now()

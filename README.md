@@ -32,15 +32,13 @@ Run apt-get update, then:
 
 # VERSIONS
 ## TODO
-- Enable storage to AWS S3 Bucket
-- Image Gallery Viewer
-
 - Date based switch to turn camera on/off (google calendar integration)
 - Change detection, to not score every image
 - Web logging
 - Product Setup (via App/Web)
 
 ## DONE
+- [2020-11-10] Upload images to S3, new repo for image gallery viewer
 - [2020-08-20] Emails via AWS SES
 - [2020-08-17] Updated Logging
 ### v0.1
